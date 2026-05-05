@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from './supabase';
 import Auth from './Auth';
-
-const TABS = ["Dashboard", "Setlist", "Proben", "Gigs", "Finanzen"];
+import Mindset from './Mindset';
+import AntiBurnout from './AntiBurnout';
+import ZeitTracker from './ZeitTracker';
+import KI from './KI.js';
+const TABS = ["Dashboard", "Setlist", "Proben", "Gigs", "Finanzen", "Zeit", "KI"];
 
 const initialData = {
   setlists: [
@@ -165,7 +168,8 @@ export default function BandFlow() {
       <div style={{ padding: "28px 32px", maxWidth: 900, margin: "0 auto" }}>
 
         {active === "Dashboard" && (
-          <div>
+          <div><Mindset />
+          <AntiBurnout arbeitsstunden={3} />
             <div style={{ marginBottom: 24 }}>
               <div style={{ fontSize: 10, color: "#475569", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 4 }}>Übersicht</div>
               <div style={{ fontFamily: "'Bebas Neue'", fontSize: 22, color: "#e2e8f0" }}>Dein Band-Status</div>
@@ -360,6 +364,8 @@ export default function BandFlow() {
           </div>
         )}
       </div>
+      {active === "Zeit" && <ZeitTracker />}
+      {active === "KI" && <KI setlists={data.setlists} />}
     </div>
   );
 }
