@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const API_KEY = "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";
+const API_KEY = process.env.REACT_APP_opdul34ny;
 
 async function claudeAnfrage(prompt) {
   const response = await fetch("https://api.anthropic.com/v1/messages", {
