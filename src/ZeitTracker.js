@@ -3,36 +3,29 @@ import { supabase } from "./supabase";
 
 const KATEGORIEN = ["Probe", "Recording", "Songwriting", "Marketing", "Fahrt", "Admin", "Anderes"];
 
-const MITGLIEDER = ["Aliosha", "Member 2", "Member 3", "Member 4"];
-
-export default function ZeitTracker() {
+export default function ZeitTracker({ mitglieder = ["Member 1", "Member 2", "Member 3", "Member 4"] }) {
   const [eintraege, setEintraege] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [timer, setTimer] = useState(null);
   const [timerLaeuft, setTimerLaeuft] = useState(false);
   const [timerSekunden, setTimerSekunden] = useState(0);
   const [neuerEintrag, setNeuerEintrag] = useState({
-    mitglied: MITGLIEDER[0],
+    mitglied: mitglieder[0],
     kategorie: KATEGORIEN[0],
     stunden: "",
-    datum: new Date().toISOString().split("T")[0],
+    date: new Date().toISOString().split("T")[0],
     notiz: ""
   });
 
-  useEffect(() => {
-    loadEintraege();
-  }, []);
+  useEffect(() => { loadEintraege(); }, []);
 
   useEffect(() => {
     let interval;
-    if (timerLaeuft) {
-      interval = setInterval(() => setTimerSekunden(s => s + 1), 1000);
-    }
+    if (timerLaeuft) interval = setInterval(() => setTimerSekunden(s => s + 1), 1000);
     return () => clearInterval(interval);
   }, [timerLaeuft]);
 
   const loadEintraege = async () => {
-    const { data } = await supabase.from('zeittracker').select('*');
+    const { data } = await supabase.from('zeittracker').select('*').order('date', { ascending: false });
     if (data) setEintraege(data);
   };
 
@@ -45,8 +38,7 @@ export default function ZeitTracker() {
 
   const timerStoppen = () => {
     setTimerLaeuft(false);
-    const stunden = (timerSekunden / 3600).toFixed(2);
-    setNeuerEintrag(prev => ({ ...prev, stunden }));
+    setNeuerEintrag(prev => ({ ...prev, stunden: (timerSekunden / 3600).toFixed(2) }));
     setShowForm(true);
     setTimerSekunden(0);
   };
@@ -54,128 +46,128 @@ export default function ZeitTracker() {
   const eintragSpeichern = async () => {
     if (!neuerEintrag.stunden) return;
     const { data: inserted } = await supabase.from('zeittracker').insert([neuerEintrag]).select();
-    if (inserted) setEintraege([...eintraege, ...inserted]);
-    setNeuerEintrag({ mitglied: MITGLIEDER[0], kategorie: KATEGORIEN[0], stunden: "", datum: new Date().toISOString().split("T")[0], notiz: "" });
+    if (inserted) setEintraege(prev => [...inserted, ...prev]);
+    setNeuerEintrag({ mitglied: mitglieder[0], kategorie: KATEGORIEN[0], stunden: "", date: new Date().toISOString().split("T")[0], notiz: "" });
     setShowForm(false);
   };
 
-  const stundenProMitglied = MITGLIEDER.map(m => ({
+  const stundenProMitglied = mitglieder.map(m => ({
     name: m,
     stunden: eintraege.filter(e => e.mitglied === m).reduce((s, e) => s + Number(e.stunden), 0)
   }));
 
   const maxStunden = Math.max(...stundenProMitglied.map(m => m.stunden), 1);
 
+  const inputStyle = {
+    background: "white",
+    border: "2px solid #dfe1e6",
+    borderRadius: 4,
+    padding: "8px 12px",
+    color: "#172b4d",
+    fontFamily: "inherit",
+    fontSize: 14,
+    outline: "none",
+    width: "100%",
+    boxSizing: "border-box"
+  };
+
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <div style={{ fontFamily: "'Bebas Neue'", fontSize: 22, color: "#e2e8f0" }}>Zeit-Tracker</div>
+        <div style={{ fontSize: 20, fontWeight: 600, color: "#172b4d" }}>Zeit-Tracker</div>
         <div style={{ display: "flex", gap: 8 }}>
           {!timerLaeuft ? (
-            <button
-              onClick={() => setTimerLaeuft(true)}
-              style={{ background: "#22c55e22", border: "1px solid #22c55e40", borderRadius: 4, padding: "8px 16px", color: "#22c55e", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer" }}
-            >
-              ▶ Timer Start
+            <button onClick={() => setTimerLaeuft(true)} style={{ background: "#e3fcef", border: "1px solid #abf5d1", borderRadius: 4, padding: "8px 16px", color: "#00875a", fontFamily: "inherit", fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
+              ▶ Timer starten
             </button>
           ) : (
-            <button
-              onClick={timerStoppen}
-              style={{ background: "#ef444422", border: "1px solid #ef444440", borderRadius: 4, padding: "8px 16px", color: "#ef4444", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer" }}
-            >
+            <button onClick={timerStoppen} style={{ background: "#ffebe6", border: "1px solid #ffbdad", borderRadius: 4, padding: "8px 16px", color: "#de350b", fontFamily: "inherit", fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
               ⏹ {formatTimer(timerSekunden)}
             </button>
           )}
-          <button
-            onClick={() => setShowForm(!showForm)}
-            style={{ background: "#ff3366", border: "none", borderRadius: 4, padding: "8px 16px", color: "white", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer" }}
-          >
+          <button onClick={() => setShowForm(!showForm)} style={{ background: "#0052cc", border: "none", borderRadius: 4, padding: "8px 16px", color: "white", fontFamily: "inherit", fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
             + Manuell
           </button>
         </div>
       </div>
 
       {timerLaeuft && (
-        <div style={{ background: "#0f1a0f", border: "1px solid #22c55e30", borderRadius: 8, padding: 16, marginBottom: 16, textAlign: "center" }}>
-          <div style={{ fontFamily: "'Bebas Neue'", fontSize: 40, color: "#22c55e", letterSpacing: "0.1em" }}>{formatTimer(timerSekunden)}</div>
-          <div style={{ fontSize: 10, color: "#475569", letterSpacing: "0.15em", textTransform: "uppercase" }}>Timer läuft...</div>
+        <div style={{ background: "#e3fcef", border: "1px solid #abf5d1", borderRadius: 8, padding: 20, marginBottom: 16, textAlign: "center" }}>
+          <div style={{ fontSize: 48, fontWeight: 700, color: "#00875a", fontVariantNumeric: "tabular-nums" }}>{formatTimer(timerSekunden)}</div>
+          <div style={{ fontSize: 13, color: "#006644", marginTop: 4 }}>Timer läuft – klicke Stop wenn du fertig bist</div>
         </div>
       )}
 
       {showForm && (
-        <div style={{ background: "#111118", border: "1px solid #ff336640", borderRadius: 8, padding: 20, marginBottom: 16 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-            <select
-              style={{ background: "#0a0a0f", border: "1px solid #1e1e2e", borderRadius: 4, padding: "8px 12px", color: "#e2e8f0", fontFamily: "'DM Mono', monospace", fontSize: 12, outline: "none" }}
-              value={neuerEintrag.mitglied}
-              onChange={e => setNeuerEintrag({ ...neuerEintrag, mitglied: e.target.value })}
-            >
-              {MITGLIEDER.map(m => <option key={m}>{m}</option>)}
-            </select>
-            <select
-              style={{ background: "#0a0a0f", border: "1px solid #1e1e2e", borderRadius: 4, padding: "8px 12px", color: "#e2e8f0", fontFamily: "'DM Mono', monospace", fontSize: 12, outline: "none" }}
-              value={neuerEintrag.kategorie}
-              onChange={e => setNeuerEintrag({ ...neuerEintrag, kategorie: e.target.value })}
-            >
-              {KATEGORIEN.map(k => <option key={k}>{k}</option>)}
-            </select>
-            <input
-              style={{ background: "#0a0a0f", border: "1px solid #1e1e2e", borderRadius: 4, padding: "8px 12px", color: "#e2e8f0", fontFamily: "'DM Mono', monospace", fontSize: 12, outline: "none" }}
-              type="number"
-              placeholder="Stunden (z.B. 1.5)"
-              value={neuerEintrag.stunden}
-              onChange={e => setNeuerEintrag({ ...neuerEintrag, stunden: e.target.value })}
-            />
-            <input
-              style={{ background: "#0a0a0f", border: "1px solid #1e1e2e", borderRadius: 4, padding: "8px 12px", color: "#e2e8f0", fontFamily: "'DM Mono', monospace", fontSize: 12, outline: "none" }}
-              type="date"
-              value={neuerEintrag.datum}
-              onChange={e => setNeuerEintrag({ ...neuerEintrag, datum: e.target.value })}
-            />
-            <input
-              style={{ background: "#0a0a0f", border: "1px solid #1e1e2e", borderRadius: 4, padding: "8px 12px", color: "#e2e8f0", fontFamily: "'DM Mono', monospace", fontSize: 12, outline: "none", gridColumn: "span 2" }}
-              placeholder="Notiz (optional)"
-              value={neuerEintrag.notiz}
-              onChange={e => setNeuerEintrag({ ...neuerEintrag, notiz: e.target.value })}
-            />
+        <div style={{ background: "white", border: "1px solid #ebecf0", borderRadius: 8, padding: 20, marginBottom: 16, boxShadow: "0 1px 3px rgba(9,30,66,0.12)" }}>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Eintrag speichern</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#6b778c", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Mitglied</div>
+              <select style={inputStyle} value={neuerEintrag.mitglied} onChange={e => setNeuerEintrag({ ...neuerEintrag, mitglied: e.target.value })}>
+                {mitglieder.map(m => <option key={m}>{m}</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#6b778c", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Kategorie</div>
+              <select style={inputStyle} value={neuerEintrag.kategorie} onChange={e => setNeuerEintrag({ ...neuerEintrag, kategorie: e.target.value })}>
+                {KATEGORIEN.map(k => <option key={k}>{k}</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#6b778c", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Stunden</div>
+              <input style={inputStyle} type="number" step="0.5" placeholder="z.B. 2.5" value={neuerEintrag.stunden} onChange={e => setNeuerEintrag({ ...neuerEintrag, stunden: e.target.value })} />
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#6b778c", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Datum</div>
+              <input style={inputStyle} type="date" value={neuerEintrag.date} onChange={e => setNeuerEintrag({ ...neuerEintrag, date: e.target.value })} />
+            </div>
+            <div style={{ gridColumn: "span 2" }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#6b778c", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Notiz (optional)</div>
+              <input style={inputStyle} placeholder="Was wurde gemacht?" value={neuerEintrag.notiz} onChange={e => setNeuerEintrag({ ...neuerEintrag, notiz: e.target.value })} />
+            </div>
           </div>
-          <button onClick={eintragSpeichern} style={{ background: "#ff3366", border: "none", borderRadius: 4, padding: "8px 16px", color: "white", fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer" }}>
-            Speichern
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={eintragSpeichern} style={{ background: "#0052cc", border: "none", borderRadius: 4, padding: "8px 16px", color: "white", fontFamily: "inherit", fontSize: 14, fontWeight: 500, cursor: "pointer" }}>Speichern</button>
+            <button onClick={() => setShowForm(false)} style={{ background: "white", border: "1px solid #dfe1e6", borderRadius: 4, padding: "8px 16px", color: "#42526e", fontFamily: "inherit", fontSize: 14, cursor: "pointer" }}>Abbrechen</button>
+          </div>
         </div>
       )}
 
-      {/* Übersicht pro Mitglied */}
-      <div style={{ background: "#111118", border: "1px solid #1e1e2e", borderRadius: 8, padding: 20, marginBottom: 16 }}>
-        <div style={{ fontSize: 10, color: "#475569", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 16 }}>Stunden pro Mitglied</div>
-        {stundenProMitglied.map(m => (
-          <div key={m.name} style={{ marginBottom: 12 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-              <span style={{ fontSize: 12, color: "#e2e8f0" }}>{m.name}</span>
-              <span style={{ fontSize: 12, color: "#ff3366" }}>{m.stunden.toFixed(1)}h</span>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div style={{ background: "white", border: "1px solid #ebecf0", borderRadius: 8, padding: 20, boxShadow: "0 1px 3px rgba(9,30,66,0.08)" }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: "#6b778c", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 16 }}>Stunden pro Mitglied</div>
+          {stundenProMitglied.map(m => (
+            <div key={m.name} style={{ marginBottom: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ fontSize: 14, color: "#172b4d" }}>{m.name}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: "#0052cc" }}>{m.stunden.toFixed(1)}h</span>
+              </div>
+              <div style={{ background: "#f4f5f7", borderRadius: 3, height: 6 }}>
+                <div style={{ background: "#0052cc", borderRadius: 3, height: 6, width: `${(m.stunden / maxStunden) * 100}%`, transition: "width 0.5s" }} />
+              </div>
             </div>
-            <div style={{ background: "#1e1e2e", borderRadius: 2, height: 4 }}>
-              <div style={{ background: "#ff3366", borderRadius: 2, height: 4, width: `${(m.stunden / maxStunden) * 100}%`, transition: "width 0.5s" }} />
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      {/* Letzte Einträge */}
-      <div style={{ background: "#111118", border: "1px solid #1e1e2e", borderRadius: 8, padding: 20 }}>
-        <div style={{ fontSize: 10, color: "#475569", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 16 }}>Letzte Einträge</div>
-        {eintraege.length === 0 ? (
-          <div style={{ color: "#334155", fontSize: 12 }}>Noch keine Einträge – starte den Timer oder füge manuell hinzu!</div>
-        ) : eintraege.slice(-5).reverse().map(e => (
-          <div key={e.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #1e1e2e" }}>
-            <div>
-              <span style={{ fontSize: 12, color: "#e2e8f0" }}>{e.mitglied}</span>
-              <span style={{ fontSize: 10, color: "#475569", marginLeft: 8 }}>{e.kategorie}</span>
-              {e.notiz && <span style={{ fontSize: 10, color: "#334155", marginLeft: 8 }}>· {e.notiz}</span>}
+        <div style={{ background: "white", border: "1px solid #ebecf0", borderRadius: 8, padding: 20, boxShadow: "0 1px 3px rgba(9,30,66,0.08)" }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: "#6b778c", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 16 }}>Letzte Einträge</div>
+          {eintraege.length === 0 ? (
+            <div style={{ color: "#6b778c", fontSize: 14 }}>Noch keine Einträge – starte den Timer!</div>
+          ) : eintraege.slice(0, 5).map(e => (
+            <div key={e.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", paddingBottom: 10, marginBottom: 10, borderBottom: "1px solid #ebecf0" }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 14, fontWeight: 500, color: "#172b4d" }}>{e.mitglied}</span>
+                  <span style={{ fontSize: 11, background: "#ebecf0", color: "#42526e", padding: "2px 6px", borderRadius: 3 }}>{e.kategorie}</span>
+                </div>
+                {e.notiz && <div style={{ fontSize: 12, color: "#6b778c", marginTop: 2 }}>{e.notiz}</div>}
+                <div style={{ fontSize: 11, color: "#6b778c", marginTop: 2 }}>{new Date(e.date).toLocaleDateString("de-CH")}</div>
+              </div>
+              <span style={{ fontSize: 14, fontWeight: 600, color: "#0052cc", flexShrink: 0 }}>{Number(e.stunden).toFixed(1)}h</span>
             </div>
-            <span style={{ fontSize: 12, color: "#ff3366" }}>{Number(e.stunden).toFixed(1)}h</span>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
