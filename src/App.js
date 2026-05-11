@@ -6,6 +6,7 @@ import AntiBurnout from './AntiBurnout';
 import SetlistManager from "./Setlist";
 import ZeitTracker from './ZeitTracker';
 import KI from './KI.js';
+import NotificationBell, { useNotifications, requestBrowserPermission } from "./Notifications";
 import Foerdergelder from './Foerdergelder';
 
 const TABS = [
@@ -67,6 +68,7 @@ export default function BandFlow() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
+    requestBrowserPermission();
     supabase.auth.onAuthStateChange((_event, session) => setSession(session));
   }, []);
 
@@ -197,6 +199,15 @@ export default function BandFlow() {
     setSession(null);
   };
 
+  // Notifications
+  const foerderDeadlines = [
+    { id: 1, name: "Pro Helvetia", deadline: "2026-03-31" },
+    { id: 2, name: "Musikfonds DE", deadline: "2026-04-15" },
+    { id: 3, name: "Initiative Musik", deadline: "2026-05-31" },
+    { id: 4, name: "Creative Europe", deadline: "2026-07-22" },
+  ];
+  const notifications = useNotifications(gigs, proben, foerderDeadlines);
+
   // Gage Split berechnen
   const netto = Number(splitGage) - Number(splitKosten || 0);
   const proPerson = Number(splitPersonen) > 0 ? netto / Number(splitPersonen) : 0;
@@ -270,6 +281,7 @@ export default function BandFlow() {
           <div className="nav-label" style={{ fontSize: 12, color: "#506176", padding: "0 12px", marginBottom: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {session.user.email}
           </div>
+          <NotificationBell notifications={notifications} />
           <button className="nav-btn" onClick={() => setShowBurnout(!showBurnout)}>
             <span>🛡️</span> <span className="nav-label">Anti-Burnout</span>
           </button>
