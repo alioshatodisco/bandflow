@@ -8,6 +8,8 @@ import ZeitTracker from './ZeitTracker';
 import KI from './KI.js';
 import NotificationBell, { useNotifications, requestBrowserPermission } from "./Notifications";
 import Foerdergelder from './Foerdergelder';
+import Band from './Band';
+import Einstellungen from './Einstellungen';
 
 const TABS = [
   { id: "Dashboard", icon: "⊞" },
@@ -40,6 +42,10 @@ export default function BandFlow() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showBurnout, setShowBurnout] = useState(false);
+  const [showEinstellungen, setShowEinstellungen] = useState(false);
+  <button className="nav-btn" onClick={() => setShowEinstellungen(true)}>
+    <span>⚙</span> <span className="nav-label">Einstellungen</span>
+  </button>
 
   // Data
   const [setlists, setSetlists] = useState([]);
@@ -282,6 +288,10 @@ export default function BandFlow() {
             {session.user.email}
           </div>
           <NotificationBell notifications={notifications} />
+          <button className="nav-btn" onClick={() => setShowEinstellungen(true)}>
+  <span style={{ fontSize: 15, width: 20, textAlign: "center" }}>⚙</span>
+  <span className="nav-label">Einstellungen</span>
+</button>
           <button className="nav-btn" onClick={() => setShowBurnout(!showBurnout)}>
             <span>🛡️</span> <span className="nav-label">Anti-Burnout</span>
           </button>
@@ -582,6 +592,7 @@ export default function BandFlow() {
         {active === "KI" && <KI setlists={setlists} />}
 
       </div>
+      {showEinstellungen && <Einstellungen session={session} onClose={() => setShowEinstellungen(false)} />}
     </div>
   );
 }
