@@ -40,7 +40,8 @@ export function useNotifications(gigs, proben, foerderDeadlines) {
     const prio = { hoch: 0, mittel: 1, niedrig: 2 };
     newNotifs.sort((a, b) => prio[a.prio] - prio[b.prio]);
     setNotifications(newNotifs);
-  }, [gigs, proben, foerderDeadlines]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(gigs), JSON.stringify(proben)]);
 
   return notifications;
 }
